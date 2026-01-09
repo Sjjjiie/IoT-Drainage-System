@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Smart Drainage Monitoring System</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -12,21 +14,31 @@
   </header>
 
   <section class="dashboard">
+    <!-- Water Level -->
     <div class="card">
       <h3>Water Level</h3>
+      <p>Current Water Level:</p>
       <p class="value" id="waterLevel">--</p>
+      <canvas id="waterLevelChart" height="150"></canvas>
     </div>
 
+    <!-- Flow Rate -->
     <div class="card">
       <h3>Flow Rate</h3>
+      <p>Current Flow Rate:</p>
       <p class="value" id="flowRate">--</p>
+      <canvas id="flowRateChart" height="150"></canvas>
     </div>
 
+    <!-- Rain Status -->
     <div class="card">
       <h3>Rain Status</h3>
+      <p>Current Rain Status:</p>
       <p class="value" id="rainStatus">--</p>
+      <canvas id="rainChart" height="150"></canvas>
     </div>
 
+    <!-- System Status -->
     <div class="card">
       <h3>System Status</h3>
       <p class="status normal" id="systemStatus">--</p>
@@ -72,7 +84,7 @@
       <div class="switch-row">
         <span>Open Gate</span>
         <label class="switch">
-          <input type="checkbox" onchange="setServo(this.checked ? 3 : 0)">
+          <input type="checkbox" id="servoSwitch" onchange="setServo(this.checked ? 3 : 0)">
           <span class="slider"></span>
         </label>
       </div>
@@ -84,22 +96,20 @@
       <div class="switch-row">
         <span>Activate</span>
         <label class="switch">
-          <input type="checkbox" onchange="setBuzzer(this.checked ? 1 : 0)">
+          <input type="checkbox" id="buzzerSwitch" onchange="setBuzzer(this.checked ? 1 : 0)">
           <span class="slider"></span>
         </label>
       </div>
     </div>
   </section>
 
-  <!-- Modular SDK only -->
+  <!-- Firebase Initialization -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { firebaseConfig } from "./config.js";
-    
-    // Initialize Firebase app
-    const app = initializeApp(firebaseConfig);
 
-    // Make globally accessible for app.js
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
     window.firebaseApp = app;
   </script>
 

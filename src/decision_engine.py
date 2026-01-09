@@ -1,9 +1,16 @@
+<<<<<<< HEAD
 # decision_engine.py
 
 def evaluate(data):
     """
     Evaluate flood conditions based on sensor data.
 
+=======
+def evaluate(data):
+    """
+    Evaluate flood conditions based on sensor data.
+
+>>>>>>> f023af4c7703eb0eec72264ba2d7928738f6a27d
     Parameters:
         data (dict): Sensor readings with keys:
             - rain (0 or 1)
@@ -42,6 +49,7 @@ def evaluate(data):
         "status": status,
         "servoAngle": servo_state,
         "buzzer": buzzer
+<<<<<<< HEAD
     }
 
 
@@ -56,3 +64,6 @@ if __name__ == "__main__":
 
     decision = evaluate(sample_data)
     print("Decision output:", decision)
+=======
+    }
+>>>>>>> f023af4c7703eb0eec72264ba2d7928738f6a27d

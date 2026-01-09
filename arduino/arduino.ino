@@ -104,9 +104,9 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   int angle = 0; 
   switch (servoState) { 
     case 0: angle = 0; break; 
-    case 1: angle = 60; break;
-    case 2: angle = 120; break;
-    case 3: angle = 180; break;
+    case 1: angle = 90; break;
+    case 2: angle = 180; break;
+    case 3: angle = 270; break;
     default: angle = 0; break; 
   } 
   Serial.print("➡️ Servo state received: "); 
