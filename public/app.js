@@ -104,10 +104,10 @@ onValue(ref(db, "latest"), (snap) => {
   flowRateFill.style.height = Math.min(flow / 2, 100) + "%";
 
   // ===== 3 Rain statuses =====
-  if (rain < 1000) {
+  if (rain < 2000) {
     rainStatus.innerText = "Heavy Rain";
     rainStatusIcon.innerText = "☔️";
-  } else if (rain < 3000) {
+  } else if (rain < 3500) {
     rainStatus.innerText = "Light Rain";
     rainStatusIcon.innerText = "🌦";
   } else {
