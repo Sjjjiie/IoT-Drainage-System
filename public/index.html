@@ -94,18 +94,8 @@
   <!-- Modular SDK only -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBB8_Lzmz4cpSBp_rjl28qjF7GbAybss6c",
-      authDomain: "drainageiot.firebaseapp.com",
-      databaseURL: "https://drainageiot-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "drainageiot",
-      storageBucket: "drainageiot.appspot.com",
-      messagingSenderId: "426970158772",
-      appId: "1:426970158772:web:719841c0778bdb458fa9e1"
-    };
-
+    import { firebaseConfig } from "./config.js";
+    
     // Initialize Firebase app
     const app = initializeApp(firebaseConfig);
 
