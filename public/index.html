@@ -9,7 +9,7 @@
 
 <body>
   <header>
-    <h1>Smart Drainage Monitoring System Tkj</h1>
+    <h1>Smart Drainage Monitoring System</h1>
     <p id="lastUpdate">Last updated: --</p>
   </header>
 
@@ -61,30 +61,63 @@
     </div>
   </section>
 
-  <!-- MANUAL CONTROL -->
-  <section class="controls">
-    <h2>Manual Control Panel</h2>
+<!-- MANUAL CONTROL -->
+<section class="controls">
+  <h2>Manual Control Panel</h2>
+  <div class="control-group">
+    <h4>LED Indicator</h4>
+    <div class="control-row">
+      <div class="switch-row">
+        <span>Green</span>
+        <label class="switch">
+          <input type="radio" name="led" value="green" onchange="setLED(this.value)">
+          <span class="slider green"></span>
+        </label>
+      </div>
 
+      <div class="switch-row">
+        <span>Yellow</span>
+        <label class="switch">
+          <input type="radio" name="led" value="yellow" onchange="setLED(this.value)">
+          <span class="slider yellow"></span>
+        </label>
+      </div>
+
+      <div class="switch-row">
+        <span>Red</span>
+        <label class="switch">
+          <input type="radio" name="led" value="red" onchange="setLED(this.value)">
+          <span class="slider red"></span>
+        </label>
+      </div>
+    </div>        
+  </div>
+
+  <div class="control-row dual">
     <div class="control-group">
-      <h4>LED Indicator</h4>
-      <div class="led-buttons">
-        <button class="led green" onclick="setLED('green')">Green</button>
-        <button class="led yellow" onclick="setLED('yellow')">Yellow</button>
-        <button class="led red" onclick="setLED('red')">Red</button>
+      <h4>Gate Servo</h4>
+      <div class="switch-row">
+        <span>Open Gate</span>
+        <label class="switch">
+          <input type="checkbox" id="servoSwitch" onchange="setServo(this.checked ? 3 : 0)">
+          <span class="slider servo"></span>
+        </label>
       </div>
     </div>
 
-    <div class="control-group">
-      <h4>Gate Servo</h4>
-      <input type="range" min="0" max="100" value="0" id="servoSlider" onchange="setServo(this.value)">
-      <span id="servoValue">0%</span>
-    </div>
-
+    <!-- BUZZER CONTROL -->
     <div class="control-group">
       <h4>Buzzer</h4>
-      <button class="buzzer-btn" id="buzzerBtn" onclick="toggleBuzzer()">OFF</button>
+      <div class="switch-row">
+        <span>Activate</span>
+        <label class="switch">
+          <input type="checkbox" id="buzzerSwitch" onchange="setBuzzer(this.checked ? 1 : 0)">
+          <span class="slider buzzer"></span>
+        </label>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- Firebase -->
   <script type="module">

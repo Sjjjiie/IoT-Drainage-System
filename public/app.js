@@ -1,4 +1,5 @@
-import { ref, onValue, set, query, orderByKey, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { ref, onValue, set, query, orderByKey, limitToLast } 
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // ===== DOM ELEMENTS =====
 const waterLevelFill = document.getElementById("waterLevelFill");
@@ -10,14 +11,13 @@ const rainStatusIcon = document.getElementById("rainStatusIcon");
 const systemStatus = document.getElementById("systemStatus");
 const lastUpdate = document.getElementById("lastUpdate");
 
-const servoSlider = document.getElementById("servoSlider");
-const servoValue = document.getElementById("servoValue");
-const buzzerBtn = document.getElementById("buzzerBtn");
+const servoSwitch = document.getElementById("servoSwitch");
+const buzzerSwitch = document.getElementById("buzzerSwitch");
 
 const ledButtons = {
-  green: document.querySelector(".led.green"),
-  yellow: document.querySelector(".led.yellow"),
-  red: document.querySelector(".led.red")
+  green: document.querySelector("input[value='green']"),
+  yellow: document.querySelector("input[value='yellow']"),
+  red: document.querySelector("input[value='red']")
 };
 
 // ===== DATABASE =====
@@ -53,25 +53,19 @@ const rainChart = new Chart(document.getElementById("rainChart"), {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
-      x: {
-        title: { display: true, text: "Time" }
-      },
+      x: { title: { display: true, text: "Time" } },
       y: {
         title: { display: true, text: "Wet → Dry" },
         reverse: true,
         min: 0,
         max: 4095,
         ticks: {
-          callback: function(value) {
-            // invert values: 0 = 100%, 4095 = 0%
-            return Math.round((1 - value / 4095) * 100) + "%";
-          }
+          callback: (value) => Math.round((1 - value / 4095) * 100) + "%"
         }
       }
     }
   }
 });
-
 
 // ===== HELPER =====
 function addDataToChart(chart, label, value) {
@@ -84,7 +78,7 @@ function addDataToChart(chart, label, value) {
   chart.update();
 }
 
-// ===== DASHBOARD SENSOR UPDATES =====
+// ===== DASHBOARD SENSOR UPDATES & STATUS =====
 onValue(ref(db, "latest"), (snap) => {
   const data = snap.val();
   if (!data) return;
@@ -92,19 +86,18 @@ onValue(ref(db, "latest"), (snap) => {
   const now = new Date().toLocaleTimeString();
   lastUpdate.innerText = "Last updated: " + now;
 
+  // --- Sensor Data ---
   const water = data.waterLevel ?? 0;
-  const flow = data.flowPulses ?? 0;
-  const rain = data.rain ?? 4095; // analog value 0-4095
+  const flow  = data.flowPulses ?? 0;
+  const rain  = data.rain ?? 4095;
 
-  // Update cards
   waterLevelText.innerText = water + " cm";
   waterLevelFill.style.height = Math.min(water, 100) + "%";
 
   flowRateText.innerText = flow + " L/min";
   flowRateFill.style.height = Math.min(flow / 2, 100) + "%";
 
-  // ===== 3 Rain statuses =====
-  if (rain < 2000) {
+  if (rain < 1500) {
     rainStatus.innerText = "Heavy Rain";
     rainStatusIcon.innerText = "☔️";
   } else if (rain < 3500) {
@@ -115,83 +108,69 @@ onValue(ref(db, "latest"), (snap) => {
     rainStatusIcon.innerText = "🌤";
   }
 
-  // Update charts
   addDataToChart(waterLevelChart, now, water);
   addDataToChart(flowRateChart, now, flow);
   addDataToChart(rainChart, now, rain);
+
+  // --- System Status ---
+  const status = data.status ?? "--";
+  systemStatus.innerText = status;
+  systemStatus.className = `system-indicator ${
+    status.toLowerCase() === "safe" ? "safe" :
+    status.toLowerCase() === "alert" ? "alert" :
+    status.toLowerCase() === "danger" ? "danger" : ""
+  }`;
 });
 
-// ===== SYSTEM STATUS / ACTUATORS =====
-onValue(ref(db, "latest"), (snap) => {
-  const data = snap.val();
-  if (!data) return;
+// ===== ACTUATORS UPDATES =====
+onValue(ref(db, "latest/outputs"), (snap) => {
+  const outputs = snap.val();
+  if (!outputs) return;
 
   isUpdatingFromBackend = true;
 
-  const currentStatus = data.status ?? "--";
-
-  // Update system status text
-  systemStatus.innerText = currentStatus;
-
-  // Update system status color
-  systemStatus.className = `system-indicator ${
-    currentStatus.toLowerCase() === "safe" ? "safe" :
-    currentStatus.toLowerCase() === "alert" ? "alert" :
-    currentStatus.toLowerCase() === "danger" ? "danger" : ""
-  }`;
-
-  updateLEDUI(data);
-  updateBuzzerUI(data.buzzer);
-  updateServoUI(data.servoAngle);
+  updateLEDUI(outputs);
+  updateBuzzerUI(outputs.buzzer);
+  const angle = outputs.servoAngle ?? 0; 
+  const servoState = (angle === 0) ? "OFF" : "ON"; 
+  updateServoUI(servoState);
 
   isUpdatingFromBackend = false;
 });
-
 
 // ===== MANUAL CONTROL =====
 window.setLED = (color) => {
   if (isUpdatingFromBackend) return;
 
-  const payload = { red: 0, yellow: 0, green: 0 };
-  if (color) payload[color] = 1;
-  set(ref(db, "manual_control"), payload);
+  const payload = { green: 0, yellow: 0, red: 0 };
+  payload[color] = 1;
 
-  Object.values(ledButtons).forEach(btn => btn.classList.remove("selected"));
-  if (ledButtons[color]) ledButtons[color].classList.add("selected");
+  set(ref(db, "manual_control"), payload);
 };
 
 window.setBuzzer = (state) => {
   if (isUpdatingFromBackend) return;
   set(ref(db, "manual_control"), { buzzer: state });
-  updateBuzzerUI(state);
 };
 
-window.toggleBuzzer = () => {
-  const state = buzzerBtn.classList.toggle("active");
-  buzzerBtn.innerText = state ? "ON" : "OFF";
-  setBuzzer(state ? 1 : 0);
-};
-
-window.setServo = (angle) => {
+window.setServo = (state) => {
   if (isUpdatingFromBackend) return;
-  set(ref(db, "manual_control"), { servoAngle: angle });
-  updateServoUI(angle);
+  // Save ON/OFF string
+  set(ref(db, "manual_control"), { servoState: state ? "ON" : "OFF" });
 };
 
 // ===== UI UPDATE HELPERS =====
-function updateServoUI(angle) {
-  servoSlider.value = Math.min(angle * 33, 100);
-  servoValue.innerText = Math.round(servoSlider.value) + "%";
+function updateServoUI(state) {
+  servoSwitch.checked = state === "ON";
 }
 
 function updateBuzzerUI(state) {
-  buzzerBtn.className = state ? "buzzer-btn active" : "buzzer-btn";
-  buzzerBtn.innerText = state ? "ON" : "OFF";
+  buzzerSwitch.checked = !!state;
 }
 
-function updateLEDUI(data) {
+function updateLEDUI(outputs) {
   Object.keys(ledButtons).forEach(color => {
-    ledButtons[color].classList.toggle("selected", data[color] === 1);
+    ledButtons[color].checked = outputs[color] === 1;
   });
 }
 

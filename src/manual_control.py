@@ -9,13 +9,14 @@ def listen_manual_control(mqtt_client):
         if event.data is None:
             return
 
-        # Ensure all keys exist to avoid backend errors
+        # Read values from Firebase
         payload = {
             "green": event.data.get("green", 0),
             "yellow": event.data.get("yellow", 0),
             "red": event.data.get("red", 0),
             "buzzer": event.data.get("buzzer", 0),
-            "servoAngle": event.data.get("servoAngle", 0)
+            # Send servoState as ON/OFF string for Arduino
+            "servoState": event.data.get("servoState", "OFF").upper()
         }
 
         print("🎮 Manual control received:", payload)
