@@ -1,129 +1,84 @@
-/* ===== GLOBAL ===== */
+/* GLOBAL */
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   background: #f4f6f8;
   margin: 0;
   padding: 0;
 }
-
 header {
   background: #0b5ed7;
   color: white;
   padding: 20px;
   text-align: center;
 }
-
 header p {
   margin: 5px 0 0;
   font-size: 14px;
   opacity: 0.8;
 }
 
-/* ===== DASHBOARD CARDS ===== */
+/* DASHBOARD CARDS */
 .dashboard.compact {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* smaller cards */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 15px;
   padding: 15px;
 }
-
-/* Smaller gauges */
-.dashboard.compact .gauge-card .gauge {
-  width: 50px;
-  height: 100px;
-}
-
-.dashboard.compact .gauge-card .gauge-text {
-  font-size: 12px;
-  bottom: 5px;
-}
-
-.dashboard.compact .card {
-  padding: 12px;
-  font-size: 14px;
-}
-
-/* Smaller icons for Rain / System */
-.dashboard.compact .status-icon {
-  font-size: 36px;
-}
-
-.dashboard.compact .system-indicator {
-  width: 80px;
-  height: 80px;
-  line-height: 80px;
-  font-size: 16px;
-}
-
-/* ===== DASHBOARD CARDS ===== */
-.dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  padding: 20px;
-}
-
 .card {
   background: white;
   padding: 20px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   text-align: center;
-  transition: transform 0.2s;
 }
-
-.card:hover { transform: translateY(-5px); }
-
-.gauge-card .gauge {
-  position: relative;
-  width: 60px;
-  height: 60px;
-  border-radius: 10px;
-  background: #e0e0e0;
-  margin: 15px auto 0;
-  overflow: hidden;
-}
-
-.gauge-fill {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: #0b5ed7;
-  height: 0%;
-  transition: height 0.6s ease-in-out;
-}
-
-.gauge-text {
-  position: absolute;
-  width: 100%;
-  bottom: 10px;
-  text-align: center;
-  font-weight: bold;
-  color: #333;
-}
-
+.gauge { position: relative; width: 60px; height: 60px; margin: 15px auto 0; background: #e0e0e0; border-radius: 10px; overflow: hidden; }
+.gauge-fill { position: absolute; bottom: 0; width: 100%; background: #0b5ed7; height: 0%; transition: height 0.6s; }
+.gauge-text { position: absolute; width: 100%; bottom: 10px; text-align: center; font-weight: bold; color: #333; }
 .status-card .system-indicator {
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  margin: 10px auto;
   line-height: 100px;
-  font-size: 18px;
-  font-weight: bold;
   color: white;
+  margin: 10px auto;
   background: gray;
-  transition: background 0.5s;
 }
-
 .status.safe { background: green; }
 .status.alert { background: orange; }
 .status.danger { background: red; }
+.status-icon { font-size: 48px; margin: 15px 0; }
 
-.status-icon {
-  font-size: 48px;
-  margin: 15px 0;
+/* GRAPHS ROW */
+.graphs-row {
+  display: flex;
+  justify-content: space-between; /* space between each graph */
+  gap: 20px; /* space */
+  padding: 20px;
+}
+.graph-card {
+  flex: 1; /* each card takes equal space */
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+}
+.graph-card:not(:last-child) {
+  margin-right: 10px; /* small separation */
+}
+.graph-card h3 { margin: 0 0 10px; font-size: 16px; text-align: center; }
+.graph-card canvas {
+  flex: 1;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 10px;
+  background: #fafafa;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
 }
 
-/* ===== MANUAL CONTROL ===== */
+/* CONTROLS */
 .controls {
   background: #fff;
   margin: 20px;
@@ -131,12 +86,7 @@ header p {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
-
-.controls h2 { margin-bottom: 20px; color: #333; }
-
 .control-group { margin-bottom: 20px; }
-
-/* LED Buttons */
 .led-buttons button {
   padding: 10px 20px;
   margin-right: 10px;
@@ -145,20 +95,12 @@ header p {
   color: white;
   font-weight: bold;
   cursor: pointer;
-  transition: transform 0.2s;
 }
-
 .led-buttons .green { background: green; }
 .led-buttons .yellow { background: orange; }
 .led-buttons .red { background: red; }
-
-.led-buttons button:active { transform: scale(0.95); }
-
-/* Servo slider */
 input[type="range"] { width: 100%; margin-top: 10px; }
 #servoValue { display: block; text-align: center; margin-top: 5px; font-weight: bold; }
-
-/* Buzzer button */
 .buzzer-btn {
   padding: 10px 20px;
   background: gray;
@@ -167,48 +109,5 @@ input[type="range"] { width: 100%; margin-top: 10px; }
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
 }
 .buzzer-btn.active { background: red; }
-
-/* ===== MANUAL CONTROL BUTTON HIGHLIGHT ===== */
-.led-buttons button,
-.buzzer-btn {
-  transition: all 0.2s ease;
-  outline: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-/* Highlight on click/selection */
-.led-buttons button.selected,
-.buzzer-btn.active {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  border: 2px solid #0b5ed7;
-}
-
-/* Servo slider - add a glow when user interacts */
-#servoSlider:active {
-  box-shadow: 0 0 8px #0b5ed7;
-}
-
-/* ===== GRAPHS COLUMN ===== */
-.graphs-column {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  padding: 20px;
-  /* max-height: 600px; optional: keeps vertical scrolling if many points */
-  /* overflow-y: auto; */
-}
-
-.graphs-column::-webkit-scrollbar { width: 8px; }
-.graphs-column::-webkit-scrollbar-track { background: #f4f6f8; border-radius: 4px; }
-.graphs-column::-webkit-scrollbar-thumb { background: #0b5ed7; border-radius: 4px; }
-
-.graph-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}

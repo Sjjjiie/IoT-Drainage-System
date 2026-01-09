@@ -9,11 +9,11 @@
 
 <body>
   <header>
-    <h1>Smart Drainage Monitoring System</h1>
+    <h1>Smart Drainage Monitoring System Tkj</h1>
     <p id="lastUpdate">Last updated: --</p>
   </header>
 
-  <!-- 1️⃣ SENSOR READINGS CARDS -->
+  <!-- SENSOR CARDS -->
   <section class="dashboard compact">
     <div class="card gauge-card">
       <h3>Water Level</h3>
@@ -43,25 +43,25 @@
     </div>
   </section>
 
-  <!-- 2️⃣ GRAPHS SECTION -->
-  <section class="graphs-column">
+  <!-- GRAPHS ROW -->
+  <section class="graphs-row">
     <div class="graph-card">
-      <h3>Water Level Monitoring</h3>
+      <h3>Water Level</h3>
       <canvas id="waterLevelChart"></canvas>
     </div>
 
     <div class="graph-card">
-      <h3>Flow Rate Monitoring</h3>
+      <h3>Flow Rate</h3>
       <canvas id="flowRateChart"></canvas>
     </div>
 
     <div class="graph-card">
-      <h3>Rain Status Monitoring</h3>
+      <h3>Rain Status</h3>
       <canvas id="rainChart"></canvas>
     </div>
   </section>
 
-  <!-- 3️⃣ MANUAL CONTROL PANEL -->
+  <!-- MANUAL CONTROL -->
   <section class="controls">
     <h2>Manual Control Panel</h2>
 
@@ -86,7 +86,7 @@
     </div>
   </section>
 
-  <!-- Firebase Initialization -->
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
@@ -95,12 +95,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // Expose globally so app.js can use
     window.firebaseApp = app;
     window.db = db;
   </script>
 
-  <!-- Main JS -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
