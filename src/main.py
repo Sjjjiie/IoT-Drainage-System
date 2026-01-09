@@ -1,5 +1,4 @@
-from firebase_service import init_firebase, save_sensor_data, save_decision
-from decision_engine import evaluate
+from firebase_service import init_firebase, save_sensor_data
 from manual_control import listen_manual_control
 
 import json
@@ -9,12 +8,11 @@ import threading
 # ===== MQTT CONFIG =====
 MQTT_BROKER = "34.9.3.146"
 MQTT_PORT = 1883
-SENSOR_TOPIC = "FloodProject/sensors"
-CTRL_TOPIC = "FloodProject/controllers"
+SENSOR_TOPIC = "FloodProject/sensors"  # match Arduino
+CTRL_TOPIC   = "FloodProject/controllers"
 
 # ===== GLOBAL MQTT CLIENT =====
 mqtt_client = None
-
 
 # ===== CALLBACK FOR SENSOR DATA =====
 def on_message(client, userdata, msg):
@@ -27,18 +25,6 @@ def on_message(client, userdata, msg):
         # 1️⃣ Save sensor data (latest + historical)
         save_sensor_data(data)
         print("💾 Sensor data saved to Firebase")
-
-        # 2️⃣ Evaluate decision
-        decision = evaluate(data)
-        print(f"⚡ Decision evaluated: {decision}")
-
-        # 3️⃣ Save decision to Firebase
-        save_decision(decision)
-        print("💾 Decision saved to Firebase")
-
-        # 4️⃣ Publish actuator command (AUTO mode)
-        mqtt_client.publish(CTRL_TOPIC, json.dumps(decision))
-        print(f"📤 Published controller message to {CTRL_TOPIC}")
 
     except Exception as e:
         print(f"❌ Error processing message: {e}")
@@ -82,8 +68,9 @@ if __name__ == "__main__":
         args=(mqtt_client,),
         daemon=True
     ).start()
-
     print("🎮 Manual control listener started")
 
-    # 4️⃣ Start MQTT loop (BLOCKING)
-    mqtt_client.loop_forever()
+    try:
+        mqtt_client.loop_forever()  # blocks and handles MQTT internally
+    except KeyboardInterrupt:
+        print("🛑 Backend stopped by user")

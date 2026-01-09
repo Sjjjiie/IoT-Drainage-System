@@ -25,6 +25,3 @@ def save_sensor_data(data):
 
     # Save historical record
     db.reference("sensor_readings").child(str(timestamp)).set(data)
-
-def save_decision(decision):
-    db.reference("decision").set(decision)

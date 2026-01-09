@@ -4,7 +4,7 @@ from firebase_service import save_sensor_data
 
 MQTT_BROKER = "34.9.3.146"
 MQTT_PORT = 1883
-MQTT_TOPIC = "FloodProject"
+MQTT_TOPIC = "FloodProject/sensors"
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
