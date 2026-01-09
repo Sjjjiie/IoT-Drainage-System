@@ -5,9 +5,8 @@
   <title>Smart Drainage Monitoring System</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="firebase-init.js"></script>
-  <script type="module" src="app.js"></script>
 </head>
+
 <body>
   <header>
     <h1>Smart Drainage Monitoring System</h1>
@@ -86,5 +85,22 @@
       <button class="buzzer-btn" id="buzzerBtn" onclick="toggleBuzzer()">OFF</button>
     </div>
   </section>
+
+  <!-- Firebase Initialization -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { firebaseConfig } from "./config.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Expose globally so app.js can use
+    window.firebaseApp = app;
+    window.db = db;
+  </script>
+
+  <!-- Main JS -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
