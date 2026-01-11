@@ -12,9 +12,6 @@ def init_firebase():
     print("✅ Firebase initialized")
 
 def save_sensor_data(data):
-    """
-    Save both latest and historical sensor data
-    """
     timestamp = int(time.time())
 
     # Save latest snapshot

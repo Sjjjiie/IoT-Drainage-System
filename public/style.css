@@ -67,9 +67,9 @@ header p {
   margin: 10px auto;
   background: gray;
 }
-.status.safe { background: green; }
-.status.alert { background: orange; }
-.status.danger { background: red; }
+.system-indicator.safe   { background-color: green; }
+.system-indicator.alert  { background-color: orange; }
+.system-indicator.danger { background-color: red; }
 .status-icon { font-size: 48px; margin: 15px 0; }
 
 /* GRAPHS ROW */

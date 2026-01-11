@@ -8,7 +8,7 @@ import threading
 # ===== MQTT CONFIG =====
 MQTT_BROKER = "34.9.3.146"
 MQTT_PORT = 1883
-SENSOR_TOPIC = "FloodProject/sensors"  # match Arduino
+SENSOR_TOPIC = "FloodProject/sensors" 
 CTRL_TOPIC   = "FloodProject/controllers"
 
 # ===== GLOBAL MQTT CLIENT =====
@@ -28,7 +28,6 @@ def on_message(client, userdata, msg):
 
     except Exception as e:
         print(f"❌ Error processing message: {e}")
-
 
 # ===== MQTT CONNECT CALLBACK =====
 def on_connect(client, userdata, flags, rc):
