@@ -95,7 +95,7 @@ int readRainSensor() {
 }
 
 String getRainStatus(int rainVal) {
-  if (rainVal <= 1500) return "HEAVY";
+  if (rainVal <= 2500) return "HEAVY";
   if (rainVal <= 3500) return "LIGHT";
   return "DRY";
 }
@@ -123,13 +123,15 @@ long readWaterLevel() {
 
 /* ================= DECISION LOGIC ================= */
 String determineStatus(int rain, unsigned long flow, long level) {
+
+
   // 1. DANGER: Highest Priority (High Water OR Blockage)
-  if (level <= 15 || (rain <= 3500 && flow < 5 && level <= 30)) {
+  if (level <= 10 || (rain <= 2500 && flow <= 5 && level <= 15)) {
     return "DANGER";
   }
 
   // 2. ALERT: Moderate Priority (Rising Water OR Any Rain)
-  if (level <= 30 && rain <= 3500) {
+  if (level <= 30 && 1000 <= rain <= 3500) {
     return "ALERT";
   }
   // 3. SAFE: Default state
@@ -299,4 +301,3 @@ void loop() {
 
   // Small delay to prevent watchdog
   delay(10);
-}
