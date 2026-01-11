@@ -55,7 +55,7 @@ const rainChart = new Chart(document.getElementById("rainChart"), {
     scales: {
       x: { title: { display: true, text: "Time" } },
       y: {
-        title: { display: true, text: "Wet → Dry" },
+        title: { display: true, text: "Dry → Wet" },
         reverse: true,
         min: 0,
         max: 4095,
@@ -87,17 +87,15 @@ onValue(ref(db, "latest"), (snap) => {
   lastUpdate.innerText = "Last updated: " + now;
 
   // --- Sensor Data ---
-const water = data.waterLevel ?? 0;
+  const water = data.waterLevel ?? 0;
   const flow  = data.flowPulses ?? 0;
   const rain  = data.rain ?? 4095;
   const currentRainStatus = data.rainStatus ?? "DRY"; 
 
   waterLevelText.innerText = water + " cm";
   waterLevelFill.style.height = Math.min(water, 100) + "%";
-
   flowRateText.innerText = flow + " L/min";
   flowRateFill.style.height = Math.min(flow / 2, 100) + "%";
-
   rainStatus.innerText = currentRainStatus; 
 
   if (currentRainStatus === "HEAVY") {

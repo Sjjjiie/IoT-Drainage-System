@@ -26,9 +26,8 @@ volatile unsigned long pulseCount = 0;
 #define GREEN  19
 #define YELLOW 18
 #define RED    5
-
 #define BUZZER_PIN 14
-const int SERVO_PIN = 17;
+#define SERVO_PIN 17
 Servo gateServo;
 
 /* ================= CLIENTS ================= */
@@ -37,14 +36,23 @@ PubSubClient client(espClient);
 
 /* ================= TIMERS ================= */
 unsigned long previousSensorMillis = 0;
-const long sensorInterval = 5000; // Publish every 5 seconds
+const long sensorInterval = 5000; // Publish sensor data every 5 seconds
+
+unsigned long lastBeep = 0;
+const long beepInterval = 500;
+bool buzzerState = false;
 
 /* ================= FLOW SENSOR ACCUMULATOR ================= */
 unsigned long flowAccumulator = 0;
 
-/* ================= BUZZER ================= */
-unsigned long buzzerStart = 0;
-bool buzzerActive = false;
+/* ================= STRUCT ================= */
+struct Outputs {
+  int green;
+  int yellow;
+  int red;
+  int servoAngle;
+  int buzzer;
+};
 
 /* ================= FLOW INTERRUPT ================= */
 void IRAM_ATTR pulseCounter() {
@@ -68,22 +76,103 @@ void setupWiFi() {
 
 /* ================= BUZZER HANDLER ================= */
 void handleBuzzer(bool activate) {
-  if (activate && !buzzerActive) {
-    digitalWrite(BUZZER_PIN, HIGH);
-    buzzerStart = millis();
-    buzzerActive = true;
+  unsigned long now = millis();
+  if (activate) {
+    if (now - lastBeep >= beepInterval) {
+      buzzerState = !buzzerState;
+      digitalWrite(BUZZER_PIN, buzzerState);
+      lastBeep = now;
+    }
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+    buzzerState = false;
+  }
+}
+
+/* ================= SENSOR READINGS ================= */
+int readRainSensor() {
+  return analogRead(RAIN_PIN); // 0 = wet, 4095 = dry
+}
+
+String getRainStatus(int rainVal) {
+  if (rainVal <= 1500) return "HEAVY";
+  if (rainVal <= 3500) return "LIGHT";
+  return "DRY";
+}
+
+unsigned long getFlowPulses() {
+  noInterrupts();
+  unsigned long pulses = flowAccumulator + pulseCount;
+  pulseCount = 0;
+  flowAccumulator = 0;
+  interrupts();
+  return pulses;
+}
+
+long readWaterLevel() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  long distance = duration * 0.034 / 2;
+  return (distance == 0) ? -1 : distance;
+}
+
+/* ================= DECISION LOGIC ================= */
+String determineStatus(int rain, unsigned long flow, long level) {
+  // 1. DANGER: Highest Priority (High Water OR Blockage)
+  if (level <= 15 || (rain <= 3500 && flow < 5 && level <= 30)) {
+    return "DANGER";
   }
 
-  if (buzzerActive && millis() - buzzerStart >= 300) {
-    digitalWrite(BUZZER_PIN, LOW);
-    buzzerActive = false;
+  // 2. ALERT: Moderate Priority (Rising Water OR Any Rain)
+  if (level <= 30 && rain <= 3500) {
+    return "ALERT";
   }
+  // 3. SAFE: Default state
+  return "SAFE";
+}
+
+/* ================= ACTUATORS CONTROL ================= */
+Outputs controlOutputs(String status) {
+  Outputs out = {0,0,0,0,0};
+
+  if (status == "SAFE") {
+    digitalWrite(GREEN,HIGH);
+    digitalWrite(YELLOW,LOW);
+    digitalWrite(RED,LOW);
+    gateServo.write(0);
+    handleBuzzer(false);
+    out.green = 1; out.servoAngle = 0; out.buzzer = 0;
+  } 
+  else if (status == "ALERT") {
+    digitalWrite(GREEN,LOW);
+    digitalWrite(YELLOW,HIGH);
+    digitalWrite(RED,LOW);
+    gateServo.write(0);
+    handleBuzzer(true);
+    out.yellow = 1; out.servoAngle = 0; out.buzzer = 1;
+  } 
+  else { // DANGER
+    digitalWrite(GREEN,LOW);
+    digitalWrite(YELLOW,LOW);
+    digitalWrite(RED,HIGH);
+    gateServo.write(180);
+    handleBuzzer(true);
+    out.red = 1; out.servoAngle = 180; out.buzzer = 1;
+  }
+
+  return out;
 }
 
 /* ================= MQTT CALLBACK ================= */
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   payload[length] = '\0';
   String msg = String((char*)payload);
+
   Serial.print("📥 Controller message: ");
   Serial.println(msg);
 
@@ -94,28 +183,26 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
     return;
   }
 
-  // LEDs
+  // ================= LEDs =================
   digitalWrite(GREEN,  doc["green"]  | 0);
   digitalWrite(YELLOW, doc["yellow"] | 0);
   digitalWrite(RED,    doc["red"]    | 0);
 
-  // Servo mapping 
-  int servoState = doc["servoAngle"].as<int>(); // expecting 0,1,2,3 
-  int angle = 0; 
-  switch (servoState) { 
-    case 0: angle = 0; break; 
-    case 1: angle = 90; break;
-    case 2: angle = 180; break;
-    case 3: angle = 270; break;
-    default: angle = 0; break; 
-  } 
-  Serial.print("➡️ Servo state received: "); 
-  Serial.print(servoState); 
-  Serial.print(" → angle: "); 
-  Serial.println(angle); 
-  gateServo.write(angle);
+  // ================= SERVO (ON / OFF) =================
+  if (doc.containsKey("servoState")) {
+    const char* servoState = doc["servoState"];
 
-  // Buzzer
+    if (strcmp(servoState, "ON") == 0) {
+      gateServo.write(180);
+      Serial.println("🚪 Servo ON → 180°");
+    } 
+    else {
+      gateServo.write(0);
+      Serial.println("🚪 Servo OFF → 0°");
+    }
+  }
+
+  // ================= BUZZER =================
   handleBuzzer(doc["buzzer"] == 1);
 }
 
@@ -136,43 +223,12 @@ void connectMQTT() {
   }
 }
 
-/* ================= SENSOR READINGS ================= */
-int readRainSensor() {
-  int count = 0;
-  for (int i = 0; i < 10; i++) {
-    if (digitalRead(RAIN_PIN) == LOW) count++;
-    delay(10); // small delay for debouncing
-  }
-  return (count >= 5) ? 1 : 0;
-}
-
-unsigned long getFlowPulses() {
-  noInterrupts();
-  unsigned long pulses = flowAccumulator + pulseCount;
-  pulseCount = 0;
-  flowAccumulator = 0; // reset accumulator
-  interrupts();
-  return pulses;
-}
-
-long readWaterLevel() {
-  digitalWrite(TRIG_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
-  long distance = duration * 0.034 / 2;
-  return (distance == 0) ? -1 : distance;
-}
-
 /* ================= SETUP ================= */
 void setup() {
   Serial.begin(115200);
-  Serial.println("=== ESP32 Flood Sensor Node ===");
+  Serial.println("=== ESP32 Flood Node ===");
 
-  // Sensors
+  // Sensor pins
   pinMode(RAIN_PIN, INPUT);
   pinMode(FLOW_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_PIN), pulseCounter, FALLING);
@@ -180,15 +236,15 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-  // Actuators
+  // Actuator pins
   pinMode(GREEN, OUTPUT);
   pinMode(YELLOW, OUTPUT);
   pinMode(RED, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
-  // Servo with explicit pulse range
-  gateServo.attach(SERVO_PIN, 500, 2400);
+  // Servo
+  gateServo.attach(SERVO_PIN);
 
   // WiFi + MQTT
   setupWiFi();
@@ -198,8 +254,7 @@ void setup() {
 
 /* ================= LOOP ================= */
 void loop() {
-  // Always process MQTT to respond to actuators quickly
-  if (!client.connected()) connectMQTT();
+  if(!client.connected()) connectMQTT();
   client.loop();
 
   // Accumulate flow pulses
@@ -208,29 +263,40 @@ void loop() {
   pulseCount = 0;
   interrupts();
 
-  // Handle non-blocking buzzer
-  handleBuzzer(buzzerActive);
-
-  // Publish sensor data every 5 seconds
+  // Read and publish sensor data every sensorInterval
   unsigned long currentMillis = millis();
   if (currentMillis - previousSensorMillis >= sensorInterval) {
     previousSensorMillis = currentMillis;
 
     int rain = readRainSensor();
+    String rainStatusStr = getRainStatus(rain);
     unsigned long flow = getFlowPulses();
     long water = readWaterLevel();
 
+    String status = determineStatus(rain, flow, water);
+    Outputs out = controlOutputs(status);
+
+    // Prepare MQTT payload
     String payload = "{";
     payload += "\"rain\":" + String(rain) + ",";
+    payload += "\"rainStatus\":\"" + rainStatusStr + "\",";
     payload += "\"flowPulses\":" + String(flow) + ",";
-    payload += "\"waterLevel\":" + String(water);
-    payload += "}";
+    payload += "\"waterLevel\":" + String(water) + ",";
+    payload += "\"status\":\"" + status + "\",";
+    payload += "\"outputs\":{";
+    payload += "\"green\":" + String(out.green) + ",";
+    payload += "\"yellow\":" + String(out.yellow) + ",";
+    payload += "\"red\":" + String(out.red) + ",";
+    payload += "\"servoAngle\":" + String(out.servoAngle) + ",";
+    payload += "\"buzzer\":" + String(out.buzzer);
+    payload += "}}";
 
-    Serial.println("📤 Sensor data:");
+    Serial.println("📤 Sensor data payload:");
     Serial.println(payload);
 
     client.publish(MQTT_SENSOR_TOPIC, payload.c_str());
   }
 
-  delay(10); // small delay to prevent watchdog reset
+  // Small delay to prevent watchdog
+  delay(10);
 }
